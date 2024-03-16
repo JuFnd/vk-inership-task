@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"crypto/sha256"
+	"filmoteka/modules/authorization/repository/profile"
 	"filmoteka/modules/authorization/repository/session"
 	"filmoteka/pkg/models"
 	"filmoteka/pkg/util"
@@ -18,27 +18,28 @@ type ICore interface {
 	KillSession(ctx context.Context, sid string) error
 	FindActiveSession(ctx context.Context, sid string) (bool, error)
 	CreateSession(ctx context.Context, login string) (models.Session, error)
-	CreateUserAccount(ctx context.Context, login string, password string) error
-	FindUserByLogin(ctx context.Context, login string) (bool, error)
-	FindUserAccount(ctx context.Context, login string, password string) (*models.UserItem, bool, error)
-	GetUserId(ctx context.Context, sid string) (int, error)
+	CreateUserAccount(login string, password string) error
+	FindUserByLogin(login string) (bool, error)
+	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
+	GetUserId(ctx context.Context, sid string) (int64, error)
+	GetUserRole(login string) (string, error)
 }
 
 type Core struct {
 	sessions session.SessionCacheRepository
 	logger   *slog.Logger
 	mutex    sync.RWMutex
-	profiles profile.ProfileRepository
+	profiles profile.IProfileRelationalRepository
 }
 
-func GetCore(profileConfig variables.RelationalDataBaseConfig, sessionConfig variables.CacheDataBaseConfig, logger *slog.Logger) (*Core, error) {
+func GetCore(profileConfig *variables.RelationalDataBaseConfig, sessionConfig variables.CacheDataBaseConfig, logger *slog.Logger) (*Core, error) {
 	sessionRepository, err := session.GetSessionRepository(sessionConfig, logger)
 	if err != nil {
 		logger.Error(variables.SessionRepositoryNotActiveError)
 		return nil, err
 	}
 
-	profileRepository, err := profile.GetUserRepo(profileConfig, logger)
+	profileRepository, err := profile.GetProfileRepository(profileConfig, logger)
 	if err != nil {
 		logger.Error(variables.ProfileRepositoryNotActiveError)
 		return nil, err
@@ -100,7 +101,7 @@ func (core *Core) FindActiveSession(ctx context.Context, sid string) (bool, erro
 	return found, nil
 }
 
-func (core *Core) CreateUserAccount(ctx context.Context, login string, password string) error {
+func (core *Core) CreateUserAccount(login string, password string) error {
 	matched, err := regexp.MatchString(variables.LoginRegexp, login)
 	if err != nil {
 		core.logger.Error(variables.StatusInternalServerError, err.Error())
@@ -110,8 +111,8 @@ func (core *Core) CreateUserAccount(ctx context.Context, login string, password 
 		core.logger.Error(variables.InvalidEmailOrPasswordError)
 		return fmt.Errorf(variables.InvalidEmailOrPasswordError)
 	}
-	hashPassword := sha256.Sum256([]byte(password))
 
+	hashPassword := util.HashPassword(password)
 	err = core.profiles.CreateUser(login, hashPassword)
 	if err != nil {
 		core.logger.Error(variables.CreateProfileError, err.Error())
@@ -121,7 +122,7 @@ func (core *Core) CreateUserAccount(ctx context.Context, login string, password 
 	return nil
 }
 
-func (core *Core) FindUserByLogin(ctx context.Context, login string) (bool, error) {
+func (core *Core) FindUserByLogin(login string) (bool, error) {
 	found, err := core.profiles.FindUser(login)
 	if err != nil {
 		core.logger.Error(variables.ProfileNotFoundError, err.Error())
@@ -131,8 +132,8 @@ func (core *Core) FindUserByLogin(ctx context.Context, login string) (bool, erro
 	return found, nil
 }
 
-func (core *Core) FindUserAccount(ctx context.Context, login string, password string) (*models.UserItem, bool, error) {
-	hashPassword := sha256.Sum256([]byte(password))
+func (core *Core) FindUserAccount(login string, password string) (*models.UserItem, bool, error) {
+	hashPassword := util.HashPassword(password)
 	user, found, err := core.profiles.GetUser(login, hashPassword)
 	if err != nil {
 		core.logger.Error(variables.ProfileNotFoundError, err.Error())
@@ -141,7 +142,7 @@ func (core *Core) FindUserAccount(ctx context.Context, login string, password st
 	return user, found, nil
 }
 
-func (core *Core) GetUserId(ctx context.Context, sid string) (int, error) {
+func (core *Core) GetUserId(ctx context.Context, sid string) (int64, error) {
 	login, err := core.sessions.GetUserLogin(ctx, sid, core.logger)
 	if err != nil {
 		return 0, err

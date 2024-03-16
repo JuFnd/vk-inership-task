@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"filmoteka/pkg/variables"
 	"io"
@@ -66,4 +67,10 @@ func RandStringRunes(seed int) string {
 		symbols[i] = variables.LetterRunes[rand.Intn(len(variables.LetterRunes))]
 	}
 	return string(symbols)
+}
+
+func HashPassword(password string) string {
+	hashPassword := sha256.Sum256([]byte(password))
+	passwordByteSlice := hashPassword[:]
+	return string(passwordByteSlice)
 }

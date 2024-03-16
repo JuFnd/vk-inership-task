@@ -10,7 +10,7 @@ import (
 )
 
 type ICore interface {
-	GetUserId(ctx context.Context, sid string) (int, error)
+	GetUserId(ctx context.Context, sid string) (int64, error)
 }
 
 func MethodMiddleware(next http.Handler, method string, logger *slog.Logger) http.Handler {
@@ -26,7 +26,7 @@ func MethodMiddleware(next http.Handler, method string, logger *slog.Logger) htt
 
 func AuthorizationMiddleware(next http.Handler, core ICore, logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := r.Cookie("session_id")
+		session, err := r.Cookie(variables.SessionCookieName)
 		if err != nil {
 			logger.Error(variables.SessionNotFoundError, r.Method, strconv.Itoa(http.StatusUnauthorized), r.URL.Path, err.Error())
 			next.ServeHTTP(w, r)

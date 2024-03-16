@@ -32,7 +32,7 @@ func (sessionCacheRepository *SessionCacheRepository) reconnectRedis() error {
 	return nil
 }
 
-func (sessionCacheRepository *SessionCacheRepository) pingRedis(logger *slog.Logger) error {
+func (sessionCacheRepository *SessionCacheRepository) pingRedis(timer int, logger *slog.Logger) error {
 	var pingErrString string
 	var reconnectErrString string
 	var retries int
@@ -52,7 +52,7 @@ func (sessionCacheRepository *SessionCacheRepository) pingRedis(logger *slog.Log
 
 		retries++
 		logger.Error(variables.AuthorizationCachePingRetryError, pingErr.Error(), reconnectErr.Error())
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Duration(timer) * time.Second)
 	}
 
 	return fmt.Errorf(variables.AuthorizationCachePingMaxRetriesError, pingErrString, reconnectErrString)
@@ -78,7 +78,7 @@ func GetSessionRepository(sessionConfig variables.CacheDataBaseConfig, logger *s
 	errs := make(chan error)
 
 	go func() {
-		errs <- sessionCacheRepository.pingRedis(logger)
+		errs <- sessionCacheRepository.pingRedis(sessionConfig.Timer, logger)
 	}()
 
 	if err := <-errs; err != nil {
@@ -109,7 +109,7 @@ func (sessionCacheRepository *SessionCacheRepository) GetSessionCache(ctx contex
 	}
 
 	if err != nil {
-		logger.Error("Get request could not be completed ", err)
+		logger.Error(variables.StatusInternalServerError, err)
 		return false, err
 	}
 

@@ -64,7 +64,7 @@ func (api *API) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, found, err := api.core.FindUserAccount(r.Context(), signinRequest.Login, signinRequest.Password)
+	user, found, err := api.core.FindUserAccount(signinRequest.Login, signinRequest.Password)
 	if err != nil {
 		util.SendResponse(w, r, http.StatusInternalServerError, nil, variables.StatusInternalServerError, err, api.logger)
 		return
@@ -94,7 +94,7 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	found, err := api.core.FindUserByLogin(r.Context(), signupRequest.Login)
+	found, err := api.core.FindUserByLogin(signupRequest.Login)
 	if err != nil {
 		util.SendResponse(w, r, http.StatusInternalServerError, nil, variables.StatusInternalServerError, err, api.logger)
 		return
@@ -105,7 +105,7 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.core.CreateUserAccount(r.Context(), signupRequest.Login, signupRequest.Password)
+	err = api.core.CreateUserAccount(signupRequest.Login, signupRequest.Password)
 	if err != nil && err.Error() == variables.InvalidEmailOrPasswordError {
 		util.SendResponse(w, r, http.StatusBadRequest, nil, variables.InvalidEmailOrPasswordError, err, api.logger)
 		return

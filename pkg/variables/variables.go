@@ -73,6 +73,13 @@ const (
 	AuthorizationCachePingRetryError      = "Authorization cache: ping failed"
 	AuthorizationCachePingMaxRetriesError = "Authorization cache: ping error. Maximum number of retries reached"
 	SessionRemoveError                    = "Delete session request could not be completed:"
+	SqlOpenError                          = "Open SQL connection failed:"
+	SqlPingError                          = "Ping SQL connection failed:"
+	SqlMaxPingRetriesError                = "Maximum number of retries reached:"
+	SqlProfileCreateError                 = "Profile create failed:"
+	FindProfileIdByLoginError             = "Find profile id by login failed:"
+	ProfileIdNotFoundByLoginError         = "Profile id not found:"
+	ProfileRoleNotFoundByLoginError       = "Profile role not found:"
 )
 
 // Repository constants
@@ -100,6 +107,14 @@ var (
 const (
 	ModuleLogger     = "Module"
 	CoreModuleLogger = "CoreModuleLogger"
+)
+
+// Main messages
+const (
+	ReadAuthConfigError      = "Read auth config failed"
+	ReadAuthSqlConfigError   = "Read auth sql config failed"
+	ReadAuthCacheConfigError = "Read auth cache config failed"
+	CoreInitializeError      = "Core initialize failed"
 )
 
 // Regexp
