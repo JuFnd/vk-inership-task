@@ -1,65 +1,63 @@
 package configs
 
 import (
+	"errors"
 	"filmoteka/pkg/variables"
 	"flag"
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"os"
+	"syscall"
 )
 
-func ReadAuthAppConfig() (*variables.AuthorizationAppConfig, error) {
-	flag.Parse()
-	var path string
-	flag.StringVar(&path, "auth_config_path", "../../configs/AuthorizationAppConfig.yml", "Путь к конфигу")
-
-	authAppConfig := variables.AuthorizationAppConfig{}
-	authAppFile, err := os.ReadFile(path)
+func readYAMLFile[T any](filePath string) (*T, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading YAML file: %w", err)
 	}
 
-	err = yaml.Unmarshal(authAppFile, &authAppConfig)
+	var config T
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling YAML data: %w", err)
 	}
 
-	return &authAppConfig, nil
+	return &config, nil
 }
 
-func ReadRelationalDataBaseConfig() (*variables.RelationalDataBaseConfig, error) {
+func ParseFlagsAndReadYAMLFile[T any](fileName string, defaultFilePath string, flags *flag.FlagSet) (*T, error) {
 	flag.Parse()
 	var path string
-	flag.StringVar(&path, "sql_config_path", "../../configs/AuthorizationSqlDataBaseConfig.yml", "Путь к конфигу")
+	flag.StringVar(&path, fileName, defaultFilePath, "Путь к конфигу"+fileName)
 
-	relationalDataBaseConfig := variables.RelationalDataBaseConfig{}
-	relationalDataBaseFile, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
+	config, err := readYAMLFile[T](path)
+	if ok := errors.As(err, &err); ok && err == syscall.ENOENT {
+		return nil, fmt.Errorf("Failed to parse '%s' from provided path: %w", fileName, err)
 	}
 
-	err = yaml.Unmarshal(relationalDataBaseFile, &relationalDataBaseConfig)
-	if err != nil {
-		return nil, err
-	}
+	return config, nil
+}
 
-	return &relationalDataBaseConfig, nil
+func ReadAuthAppConfig() (*variables.AppConfig, error) {
+	return ParseFlagsAndReadYAMLFile[variables.AppConfig]("auth_config_path", "../../configs/AuthorizationAppConfig.yml", flag.CommandLine)
+}
+
+func ReadGrpcConfig() (*variables.GrpcConfig, error) {
+	return ParseFlagsAndReadYAMLFile[variables.GrpcConfig]("grpc_config_path", "../../configs/GrpcConfig.yml", flag.CommandLine)
+}
+
+func ReadFilmsAppConfig() (*variables.AppConfig, error) {
+	return ParseFlagsAndReadYAMLFile[variables.AppConfig]("films_config_path", "../../configs/FilmsAppConfig.yml", flag.CommandLine)
+}
+
+func ReadRelationalAuthDataBaseConfig() (*variables.RelationalDataBaseConfig, error) {
+	return ParseFlagsAndReadYAMLFile[variables.RelationalDataBaseConfig]("sql_config_auth_path", "../../configs/AuthorizationSqlDataBaseConfig.yml", flag.CommandLine)
+}
+
+func ReadRelationalFilmsDataBaseConfig() (*variables.RelationalDataBaseConfig, error) {
+	return ParseFlagsAndReadYAMLFile[variables.RelationalDataBaseConfig]("sql_config_films_path", "../../configs/FilmsSqlDataBaseConfig.yml", flag.CommandLine)
 }
 
 func ReadCacheDatabaseConfig() (*variables.CacheDataBaseConfig, error) {
-	flag.Parse()
-	var path string
-	flag.StringVar(&path, "cache_config_path", "../../configs/AuthorizationCacheDataBaseConfig.yml", "Путь к конфигу")
-
-	cacheDataBaseConfig := variables.CacheDataBaseConfig{}
-	cacheDataBaseFile, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	err = yaml.Unmarshal(cacheDataBaseFile, &cacheDataBaseConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return &cacheDataBaseConfig, nil
+	return ParseFlagsAndReadYAMLFile[variables.CacheDataBaseConfig]("cache_config_path", "../../configs/AuthorizationCacheDataBaseConfig.yml", flag.CommandLine)
 }

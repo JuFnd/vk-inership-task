@@ -58,7 +58,7 @@ func (sessionCacheRepository *SessionCacheRepository) pingRedis(timer int, logge
 	return fmt.Errorf(variables.AuthorizationCachePingMaxRetriesError, pingErrString, reconnectErrString)
 }
 
-func GetSessionRepository(sessionConfig variables.CacheDataBaseConfig, logger *slog.Logger) (*SessionCacheRepository, error) {
+func GetSessionRepository(sessionConfig *variables.CacheDataBaseConfig, logger *slog.Logger) (*SessionCacheRepository, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     sessionConfig.Host,
 		Password: sessionConfig.Password,

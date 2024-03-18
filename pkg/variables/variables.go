@@ -23,6 +23,18 @@ const (
 	SessionKilledError          = "Session killed failed"
 	SessionNotFoundError        = "Session not found"
 	UserAlreadyExistsError      = "User already exists"
+	StatusForbiddenError        = "Forbidden"
+	ActorsNotFoundError         = "Actors not found"
+	ActorNotAddedError          = "Actor not added"
+	ActorNotEditedError         = "Actor not edited"
+	FilmsNotFoundError          = "Films not found"
+	FilmNotFoundError           = "Film not found"
+	GrpcListenAndServeError     = "Failed grpc to listen and serve"
+	GrpcConnectError            = "Failed grpc to connect"
+	ActorNotDeletedError        = "Actor not deleted"
+	FilmNotAddedError           = "Film not added"
+	FilmNotEditedError          = "Film not edited"
+	FilmNotDeletedError         = "Film not deleted"
 )
 
 // Middleware types
@@ -39,8 +51,8 @@ const (
 
 // Configs types
 type (
-	AuthorizationAppConfig struct {
-		Port string `yaml:"port"`
+	AppConfig struct {
+		Address string `yaml:"address"`
 	}
 
 	CacheDataBaseConfig struct {
@@ -60,12 +72,22 @@ type (
 		MaxOpenConns int    `yaml:"max_open_conns"`
 		Timer        uint32 `yaml:"timer"`
 	}
+
+	GrpcConfig struct {
+		Port           string `yaml:"port"`
+		ConnectionType string `yaml:"connection_type"`
+	}
 )
 
 // Cookies data
 const (
 	SessionCookieName = "session_id"
 	HttpOnly          = true
+)
+
+// Core messages
+const (
+	FilmEditError = "Film not edited"
 )
 
 // Repository messages
@@ -84,7 +106,10 @@ const (
 
 // Repository constants
 const (
-	MaxRetries = 5
+	MaxRetries  = 5
+	UserRoleId  = 1
+	AdminRoleId = 2
+	PageSize    = 10
 )
 
 // Core Messages
@@ -96,6 +121,12 @@ const (
 	ProfileNotFoundError            = "Profile not found"
 	GetProfileError                 = "Get profile failed"
 	GetProfileRoleError             = "Get profile role failed"
+	RatingSizeError                 = "Rating must be from 0 to 10"
+	TitleSizeError                  = "Title size must be from 1 to 150"
+	DescriptionSizeError            = "Description size must be from 1 to 1000"
+	FilmsListNotFoundError          = "Films list not found"
+	ActorNameSizeError              = "Actor name size must be from 1 to 150"
+	GrpcRecievError                 = "gRPC recieve error"
 )
 
 // Core variables
@@ -113,11 +144,36 @@ const (
 const (
 	ReadAuthConfigError      = "Read auth config failed"
 	ReadAuthSqlConfigError   = "Read auth sql config failed"
+	ReadFilmsSqlConfigError  = "Read films sql config failed"
 	ReadAuthCacheConfigError = "Read auth cache config failed"
+	ReadGrpcConfigError      = "Grpc config file error"
 	CoreInitializeError      = "Core initialize failed"
 )
 
 // Regexp
 const (
 	LoginRegexp = `^[a-zA-Z0-9]+$`
+)
+
+// Roles
+const (
+	AdminRole = "admin"
+)
+
+// Query params
+const (
+	PaginationPageNumber = "page"
+	PaginationPageSize   = "page_size"
+)
+
+// Validate params
+const (
+	FilmTitleBegin       = 1
+	FilmTitleEnd         = 150
+	FilmDescriptionBegin = 1
+	FilmDescriptionEnd   = 1000
+	FilmRatingBegin      = 0
+	FilmRatingEnd        = 10
+	ActorNameBegin       = 1
+	ActorNameEnd         = 150
 )

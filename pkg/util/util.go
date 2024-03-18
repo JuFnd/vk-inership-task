@@ -1,15 +1,17 @@
 package util
 
 import (
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/json"
 	"filmoteka/pkg/variables"
+	"fmt"
 	"io"
 	"log/slog"
 	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
+	"unicode/utf8"
 )
 
 func SendResponse(w http.ResponseWriter, r *http.Request, status int, body any, errorMessage string, handlerError error, logger *slog.Logger) {
@@ -69,8 +71,30 @@ func RandStringRunes(seed int) string {
 	return string(symbols)
 }
 
-func HashPassword(password string) string {
-	hashPassword := sha256.Sum256([]byte(password))
+func HashPassword(password string) []byte {
+	hashPassword := sha512.Sum512([]byte(password))
 	passwordByteSlice := hashPassword[:]
-	return string(passwordByteSlice)
+	return passwordByteSlice
+}
+
+func Pagination(r *http.Request) (uint64, uint64) {
+	page, err := strconv.ParseUint(r.URL.Query().Get(variables.PaginationPageNumber), 10, 64)
+	if err != nil {
+		page = 1
+	}
+	pageSize, err := strconv.ParseUint(r.URL.Query().Get(variables.PaginationPageSize), 10, 64)
+	if err != nil {
+		pageSize = 10
+	}
+
+	return pageSize, page
+}
+
+func ValidateStringSize(validatedString string, begin int, end int, validateError string, logger *slog.Logger) error {
+	validateStringLength := utf8.RuneCountInString(validatedString)
+	if validateStringLength > end || validateStringLength < begin {
+		logger.Error(validateError)
+		return fmt.Errorf(validateError)
+	}
+	return nil
 }

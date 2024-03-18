@@ -1,0 +1,120 @@
+basePath: /
+definitions:
+  communication.SigninRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  communication.SignupRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: VK Filmoteka authorization service
+  title: Authorization service
+  version: "1.0"
+paths:
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: End current user's active session
+      operationId: end-current-session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session ended successfully.
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Logout
+      tags:
+      - authentication
+  /signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user by providing login and password credentials
+      operationId: authenticate-user
+      parameters:
+      - description: login and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/communication.SigninRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication token
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: SignIn
+      tags:
+      - authentication
+  /signup:
+    post:
+      consumes:
+      - application/json
+      operationId: create-account
+      parameters:
+      - description: account information
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/communication.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: SignUp
+      tags:
+      - authorization
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

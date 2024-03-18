@@ -2,13 +2,27 @@ package main
 
 import (
 	"filmoteka/configs"
-	"filmoteka/modules/authorization/delivery"
+	delivery_grpc "filmoteka/modules/authorization/delivery/grpc"
+	"filmoteka/modules/authorization/delivery/http"
 	"filmoteka/modules/authorization/usecase"
 	"filmoteka/pkg/variables"
 	"fmt"
 	"log/slog"
 	"os"
+
+	_ "filmoteka/docs"
 )
+
+// @title Authorization service
+// @version 1.0
+// @description VK Filmoteka authorization service
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apiKey ApiKeyAuth
+// @in header
+// @name Authorization
 
 func main() {
 	logFile, err := os.Create("authorization.log")
@@ -24,7 +38,7 @@ func main() {
 		return
 	}
 
-	relationalDataBaseConfig, err := configs.ReadRelationalDataBaseConfig()
+	relationalDataBaseConfig, err := configs.ReadRelationalAuthDataBaseConfig()
 	if err != nil {
 		logger.Error(variables.ReadAuthSqlConfigError, err.Error())
 		return
@@ -42,11 +56,21 @@ func main() {
 		return
 	}
 
+	grpcServer, err := delivery_grpc.NewServer(relationalDataBaseConfig, cacheDatabaseConfig, logger)
+	if err != nil {
+		logger.Error(variables.ListenAndServeError)
+		return
+	}
+
 	api := delivery.GetAuthorizationApi(core, logger)
 
 	errs := make(chan error, 2)
 	go func() {
 		errs <- api.ListenAndServe(authAppConfig)
+	}()
+
+	go func() {
+		errs <- grpcServer.ListenAndServeGrpc()
 	}()
 
 	err = <-errs

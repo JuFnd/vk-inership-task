@@ -1,5 +1,5 @@
 user: "boss"
-dbname: "auth_service"
+dbname: "films_service"
 password: "boss"
 host: "127.0.0.1"
 port: 5432

@@ -14,25 +14,31 @@ import (
 	"time"
 )
 
-type ICore interface {
-	KillSession(ctx context.Context, sid string) error
-	FindActiveSession(ctx context.Context, sid string) (bool, error)
-	CreateSession(ctx context.Context, login string) (models.Session, error)
-	CreateUserAccount(login string, password string) error
-	FindUserByLogin(login string) (bool, error)
-	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
-	GetUserId(ctx context.Context, sid string) (int64, error)
-	GetUserRole(login string) (string, error)
+// Relational data base interface
+type IProfileRelationalRepository interface {
+	CreateUser(login string, password []byte) error
+	FindUser(login string) (bool, error)
+	GetUser(login string, password []byte) (*models.UserItem, bool, error)
+	GetUserProfileId(login string) (int64, error)
+	GetUserRole(id int64) (string, error)
+}
+
+// Cache data base interface
+type ISessionCacheRepository interface {
+	SaveSessionCache(ctx context.Context, createdSessionObject models.Session, logger *slog.Logger) (bool, error)
+	GetSessionCache(ctx context.Context, sid string, logger *slog.Logger) (bool, error)
+	DeleteSessionCache(ctx context.Context, sid string, logger *slog.Logger) (bool, error)
+	GetUserLogin(ctx context.Context, sid string, logger *slog.Logger) (string, error)
 }
 
 type Core struct {
-	sessions session.SessionCacheRepository
+	sessions ISessionCacheRepository
 	logger   *slog.Logger
 	mutex    sync.RWMutex
-	profiles profile.IProfileRelationalRepository
+	profiles IProfileRelationalRepository
 }
 
-func GetCore(profileConfig *variables.RelationalDataBaseConfig, sessionConfig variables.CacheDataBaseConfig, logger *slog.Logger) (*Core, error) {
+func GetCore(profileConfig *variables.RelationalDataBaseConfig, sessionConfig *variables.CacheDataBaseConfig, logger *slog.Logger) (*Core, error) {
 	sessionRepository, err := session.GetSessionRepository(sessionConfig, logger)
 	if err != nil {
 		logger.Error(variables.SessionRepositoryNotActiveError)
@@ -46,7 +52,7 @@ func GetCore(profileConfig *variables.RelationalDataBaseConfig, sessionConfig va
 	}
 
 	core := Core{
-		sessions: *sessionRepository,
+		sessions: sessionRepository,
 		logger:   logger.With(variables.ModuleLogger, variables.CoreModuleLogger),
 		profiles: profileRepository,
 	}
@@ -156,8 +162,8 @@ func (core *Core) GetUserId(ctx context.Context, sid string) (int64, error) {
 	return id, nil
 }
 
-func (core *Core) GetUserRole(login string) (string, error) {
-	role, err := core.profiles.GetUserRole(login)
+func (core *Core) GetUserRole(ctx context.Context, id int64) (string, error) {
+	role, err := core.profiles.GetUserRole(id)
 	if err != nil {
 		core.logger.Error(variables.GetProfileRoleError, err.Error())
 		return "", fmt.Errorf(variables.GetProfileRoleError, " %w", err)

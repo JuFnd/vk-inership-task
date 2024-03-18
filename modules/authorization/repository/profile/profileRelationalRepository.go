@@ -8,15 +8,9 @@ import (
 	"fmt"
 	"log/slog"
 	"time"
-)
 
-type IProfileRelationalRepository interface {
-	CreateUser(login string, password string) error
-	FindUser(login string) (bool, error)
-	GetUser(login string, password string) (*models.UserItem, bool, error)
-	GetUserProfileId(login string) (int64, error)
-	GetUserRole(login string) (string, error)
-}
+	_ "github.com/jackc/pgx/stdlib"
+)
 
 type ProfileRelationalRepository struct {
 	db *sql.DB
@@ -57,12 +51,12 @@ func GetProfileRepository(configDatabase *variables.RelationalDataBaseConfig, lo
 	return &profileDb, nil
 }
 
-func (profileRelationalRepository *ProfileRelationalRepository) pingDb(timer uint32, logger *slog.Logger) error {
+func (repository *ProfileRelationalRepository) pingDb(timer uint32, logger *slog.Logger) error {
 	var err error
 	var retries int
 
 	for retries < variables.MaxRetries {
-		err = profileRelationalRepository.db.Ping()
+		err = repository.db.Ping()
 		if err == nil {
 			return nil
 		}
@@ -76,38 +70,52 @@ func (profileRelationalRepository *ProfileRelationalRepository) pingDb(timer uin
 	return fmt.Errorf(variables.SqlMaxPingRetriesError, err.Error())
 }
 
-func (profileRelationalRepository *ProfileRelationalRepository) CreateUser(login string, password string) error {
-	_, err := profileRelationalRepository.db.Exec(
-		"INSERT INTO profile (login, id_password)"+
-			"VALUES ($1, (SELECT id FROM password WHERE value = $2))", login, password)
+func (repository *ProfileRelationalRepository) CreateUser(login string, password []byte) error {
+	_, err := repository.db.Exec(
+		`INSERT INTO password(value)
+			   VALUES ($1)`, password)
 	if err != nil {
-		return fmt.Errorf(variables.SqlProfileCreateError, " %w", err)
+		return fmt.Errorf(variables.SqlProfileCreateError, err.Error())
+	}
+
+	_, errProfile := repository.db.Exec(
+		`INSERT INTO profile(login, password_id)
+			   VALUES ($1, (SELECT id FROM password WHERE value = $2 LIMIT 1))`,
+		login, password)
+	if errProfile != nil {
+		return fmt.Errorf(variables.SqlProfileCreateError, err.Error())
+	}
+
+	_, errRole := repository.db.Exec(`INSERT INTO profile_role(profile_id, role_id)
+                                             VALUES ((SELECT id FROM profile WHERE login = $1), $2)`, login, variables.UserRoleId)
+	if errRole != nil {
+		return fmt.Errorf(variables.SqlProfileCreateError, err.Error())
 	}
 	return nil
 }
 
-func (profileRelationalRepository *ProfileRelationalRepository) FindUser(login string) (bool, error) {
+func (repository *ProfileRelationalRepository) FindUser(login string) (bool, error) {
 	userItem := &models.UserItem{}
 
-	err := profileRelationalRepository.db.QueryRow(
-		"SELECT login FROM profile"+
-			"WHERE login = $1", login).Scan(&userItem.Login)
+	err := repository.db.QueryRow(
+		`SELECT login FROM profile
+			   WHERE login = $1`, login).Scan(&userItem.Login)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
-		return false, fmt.Errorf(variables.ProfileNotFoundError, ": %w", err)
+		return false, fmt.Errorf(variables.ProfileNotFoundError, err.Error())
 	}
 	return true, nil
 }
 
-func (profileRelationalRepository *ProfileRelationalRepository) GetUser(login string, password string) (*models.UserItem, bool, error) {
+func (repository *ProfileRelationalRepository) GetUser(login string, password []byte) (*models.UserItem, bool, error) {
 	userItem := &models.UserItem{}
 
-	err := profileRelationalRepository.db.QueryRow(
-		"SELECT login FROM profile"+
-			"JOIN password ON profile.id_password = password.id"+
-			"WHERE profile.login = $1 AND password.value = $2", login, password).Scan(&userItem.Login)
+	err := repository.db.QueryRow(
+		`SELECT login FROM profile
+			JOIN password ON profile.password_id = password.id
+			WHERE profile.login = $1 AND password.value = $2`, login, password).Scan(&userItem.Login)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, false, fmt.Errorf(variables.InvalidEmailOrPasswordError, ": %w", err)
@@ -118,10 +126,10 @@ func (profileRelationalRepository *ProfileRelationalRepository) GetUser(login st
 	return userItem, true, nil
 }
 
-func (profileRelationalRepository *ProfileRelationalRepository) GetUserProfileId(login string) (int64, error) {
+func (repository *ProfileRelationalRepository) GetUserProfileId(login string) (int64, error) {
 	var userId int64
 
-	err := profileRelationalRepository.db.QueryRow("SELECT id FROM profile WHERE login = $1", login).Scan(&userId)
+	err := repository.db.QueryRow("SELECT id FROM profile WHERE login = $1", login).Scan(&userId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, fmt.Errorf(variables.ProfileIdNotFoundByLoginError, " %s", login)
@@ -131,11 +139,13 @@ func (profileRelationalRepository *ProfileRelationalRepository) GetUserProfileId
 	return userId, nil
 }
 
-func (profileRelationalRepository *ProfileRelationalRepository) GetUserRole(login string) (string, error) {
+func (repository *ProfileRelationalRepository) GetUserRole(id int64) (string, error) {
 	var role string
 
-	err := profileRelationalRepository.db.QueryRow("SELECT role.value FROM profile"+
-		"JOIN role ON profile.id_role = role.id WHERE profile.login = $1", login).Scan(&role)
+	err := repository.db.QueryRow(`SELECT role.value FROM profile
+		JOIN profile_role ON profile.id = profile_role.profile_id
+		JOIN role ON profile_role.role_id = role.id
+		WHERE profile.id = $1`, id).Scan(&role)
 	if err != nil {
 		return "", fmt.Errorf(variables.ProfileRoleNotFoundByLoginError, " %w", err)
 	}
