@@ -75,7 +75,7 @@ func (repository *ProfileRelationalRepository) CreateUser(login string, password
 		`INSERT INTO password(value)
 			   VALUES ($1)`, password)
 	if err != nil {
-		return fmt.Errorf(variables.SqlProfileCreateError, err.Error())
+		return fmt.Errorf(variables.SqlProfileCreateError, err)
 	}
 
 	_, errProfile := repository.db.Exec(
@@ -83,13 +83,13 @@ func (repository *ProfileRelationalRepository) CreateUser(login string, password
 			   VALUES ($1, (SELECT id FROM password WHERE value = $2 LIMIT 1))`,
 		login, password)
 	if errProfile != nil {
-		return fmt.Errorf(variables.SqlProfileCreateError, err.Error())
+		return fmt.Errorf(variables.SqlProfileCreateError, err)
 	}
 
 	_, errRole := repository.db.Exec(`INSERT INTO profile_role(profile_id, role_id)
                                              VALUES ((SELECT id FROM profile WHERE login = $1), $2)`, login, variables.UserRoleId)
 	if errRole != nil {
-		return fmt.Errorf(variables.SqlProfileCreateError, err.Error())
+		return fmt.Errorf(variables.SqlProfileCreateError, err)
 	}
 	return nil
 }

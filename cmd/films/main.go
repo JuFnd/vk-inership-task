@@ -11,6 +11,16 @@ import (
 	"os"
 )
 
+// @title Films service
+// @version 1.0
+// @description VK Filmoteka films service
+
+// @host localhost:8081
+// @BasePath /
+
+// @in header
+// @name Films
+
 func main() {
 	logFile, err := os.Create("films.log")
 	if err != nil {

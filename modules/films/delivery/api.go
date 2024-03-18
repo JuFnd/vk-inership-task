@@ -36,7 +36,7 @@ type API struct {
 func (api *API) ListenAndServe(appConfig *variables.AppConfig) error {
 	err := http.ListenAndServe(appConfig.Address, api.mux)
 	if err != nil {
-		api.logger.Error(variables.ListenAndServeError, err.Error())
+		//api.logger.Error(variables.ListenAndServeError, err.Error())
 		return err
 	}
 	return nil
@@ -123,6 +123,16 @@ func GetFilmsApi(filmsCore ICore, filmsLogger *slog.Logger) *API {
 	return api
 }
 
+// @Summary Actors
+// @Tags films
+// @Description Get actors list
+// @ID actors-list
+// @Accept json
+// @Produce json
+// @Success 200 {string} string "Actors list"
+// @Failure 404 {string} string variables.ActorsNotFoundError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/actors [get]
 func (api *API) GetActors(w http.ResponseWriter, r *http.Request) {
 	size, page := util.Pagination(r)
 
@@ -134,6 +144,17 @@ func (api *API) GetActors(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, actors, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Films
+// @Tags films
+// @Description Get films list
+// @ID films-list
+// @Accept json
+// @Produce json
+// @Param sort_by query string true "sort order"
+// @Success 200 {string} string "Sorted Films List"
+// @Failure 404 {string} string variables.FilmsNotFoundError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/films [get]
 func (api *API) GetFilms(w http.ResponseWriter, r *http.Request) {
 	sortedBy := r.URL.Query().Get("sort_by")
 	pageSize, page := util.Pagination(r)
@@ -146,6 +167,18 @@ func (api *API) GetFilms(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, films, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Search-Films
+// @Tags films
+// @Description Search films
+// @ID films-search
+// @Accept json
+// @Produce json
+// @Param film_name query string true "film name"
+// @Param actor_name query string true "actor name"
+// @Success 200 {string} string "Films list"
+// @Failure 404 {string} string variables.FilmsNotFoundError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/films/search [get]
 func (api *API) SearchFilms(w http.ResponseWriter, r *http.Request) {
 	filmName := r.URL.Query().Get("film_name")
 	actorName := r.URL.Query().Get("actor_name")
@@ -158,6 +191,21 @@ func (api *API) SearchFilms(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, film, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Add-Actor
+// @Tags films
+// @Security ApiKeyAuth
+// @Description Add new actor
+// @ID add-new-actor
+// @Accept json
+// @Produce json
+// @Header 200 {integer} 1
+// @Success 200 {string} string "Actor added"
+// @Failure 401 {string} string variables.StatusUnauthorizedError
+// @Failure 400 {string} string variables.StatusBadRequestError
+// @Failure 403 {string} string variables.StatusForbiddenError
+// @Failure 409 {string} string variables.ActorNotAddedError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/actors/add [post]
 func (api *API) AddInfoAboutActor(w http.ResponseWriter, r *http.Request) {
 	var addActorRequest communication.AddActorRequest
 
@@ -174,6 +222,21 @@ func (api *API) AddInfoAboutActor(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, nil, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Edit-Actor
+// @Tags films
+// @Security ApiKeyAuth
+// @Description Edit actors information
+// @ID edit-actor
+// @Accept json
+// @Produce json
+// @Header 200 {integer} 1
+// @Success 200 {string} string "Actor edited"
+// @Failure 401 {string} string variables.StatusUnauthorizedError
+// @Failure 400 {string} string variables.StatusBadRequestError
+// @Failure 403 {string} string variables.StatusForbiddenError
+// @Failure 409 {string} string variables.ActorNotEditedError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/actors/edit [post]
 func (api *API) EditInfoAboutActor(w http.ResponseWriter, r *http.Request) {
 	var editActorRequest communication.EditActorRequest
 
@@ -190,6 +253,21 @@ func (api *API) EditInfoAboutActor(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, nil, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Remove-Actor
+// @Tags films
+// @Security ApiKeyAuth
+// @Description Remove actors information
+// @ID remove-actor
+// @Accept json
+// @Produce json
+// @Header 200 {integer} 1
+// @Success 200 {string} string "Actor removed"
+// @Failure 401 {string} string variables.StatusUnauthorizedError
+// @Failure 400 {string} string variables.StatusBadRequestError
+// @Failure 403 {string} string variables.StatusForbiddenError
+// @Failure 409 {string} string variables.ActorNotDeletedError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/actors/remove [post]
 func (api *API) RemoveInfoAboutActor(w http.ResponseWriter, r *http.Request) {
 	var deleteActorRequest communication.DeleteActorRequest
 
@@ -206,6 +284,21 @@ func (api *API) RemoveInfoAboutActor(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, nil, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Add-Film
+// @Tags films
+// @Security ApiKeyAuth
+// @Description Add new film
+// @ID add-new-film
+// @Accept json
+// @Produce json
+// @Header 200 {integer} 1
+// @Success 200 {string} string "Film added"
+// @Failure 401 {string} string variables.StatusUnauthorizedError
+// @Failure 400 {string} string variables.StatusBadRequestError
+// @Failure 403 {string} string variables.StatusForbiddenError
+// @Failure 409 {string} string variables.FilmNotAddedError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/films/add [post]
 func (api *API) AddFilm(w http.ResponseWriter, r *http.Request) {
 	var addFilmRequest communication.AddFilmRequest
 
@@ -222,6 +315,21 @@ func (api *API) AddFilm(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, nil, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Edit-Film
+// @Tags films
+// @Security ApiKeyAuth
+// @Description Add new film
+// @ID edit-new-film
+// @Accept json
+// @Produce json
+// @Header 200 {integer} 1
+// @Success 200 {string} string "Film edited"
+// @Failure 401 {string} string variables.StatusUnauthorizedError
+// @Failure 400 {string} string variables.StatusBadRequestError
+// @Failure 403 {string} string variables.StatusForbiddenError
+// @Failure 409 {string} string variables.FilmNotEditedError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/films/edit [post]
 func (api *API) EditFilm(w http.ResponseWriter, r *http.Request) {
 	var editFilmRequest communication.EditFilmRequest
 
@@ -238,6 +346,22 @@ func (api *API) EditFilm(w http.ResponseWriter, r *http.Request) {
 	util.SendResponse(w, r, http.StatusOK, nil, variables.StatusOkMessage, nil, api.logger)
 }
 
+// @Summary Remove-Film
+// @Tags films
+// @Security ApiKeyAuth
+// @Description Remove films information
+// @ID remove-film
+// @Accept json
+// @Produce json
+// @Header 200 {integer} 1
+// @Params input body communication.DeleteFilmRequest true "Delete Film by Id"
+// @Success 200 {string} string "Film removed"
+// @Failure 401 {string} string variables.StatusUnauthorizedError
+// @Failure 400 {string} string variables.StatusBadRequestError
+// @Failure 403 {string} string variables.StatusForbiddenError
+// @Failure 409 {string} string variables.ActorNotDeletedError
+// @Failure 500 {string} string variables.StatusInternalServerError
+// @Router /api/v1/films/remove [post]
 func (api *API) RemoveFilm(w http.ResponseWriter, r *http.Request) {
 	var deleteFilmRequest communication.DeleteFilmRequest
 

@@ -14,13 +14,330 @@ definitions:
       password:
         type: string
     type: object
-host: localhost:8080
+host: localhost:8081
 info:
   contact: {}
-  description: VK Filmoteka authorization service
-  title: Authorization service
+  description: VK Filmoteka films service
+  title: Films service
   version: "1.0"
 paths:
+  /api/v1/actors:
+    get:
+      consumes:
+      - application/json
+      description: Get actors list
+      operationId: actors-list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Actors list
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Actors
+      tags:
+      - films
+  /api/v1/actors/add:
+    post:
+      consumes:
+      - application/json
+      description: Add new actor
+      operationId: add-new-actor
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Actor added
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Add-Actor
+      tags:
+      - films
+  /api/v1/actors/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edit actors information
+      operationId: edit-actor
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Actor edited
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Edit-Actor
+      tags:
+      - films
+  /api/v1/actors/remove:
+    post:
+      consumes:
+      - application/json
+      description: Remove actors information
+      operationId: remove-actor
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Actor removed
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Remove-Actor
+      tags:
+      - films
+  /api/v1/films:
+    get:
+      consumes:
+      - application/json
+      description: Get films list
+      operationId: films-list
+      parameters:
+      - description: sort order
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sorted Films List
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Films
+      tags:
+      - films
+  /api/v1/films/add:
+    post:
+      consumes:
+      - application/json
+      description: Add new film
+      operationId: add-new-film
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Film added
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Add-Film
+      tags:
+      - films
+  /api/v1/films/edit:
+    post:
+      consumes:
+      - application/json
+      description: Add new film
+      operationId: edit-new-film
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Film edited
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Edit-Film
+      tags:
+      - films
+  /api/v1/films/remove:
+    post:
+      consumes:
+      - application/json
+      description: Remove films information
+      operationId: remove-film
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Film removed
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Remove-Film
+      tags:
+      - films
+  /api/v1/films/search:
+    get:
+      consumes:
+      - application/json
+      description: Search films
+      operationId: films-search
+      parameters:
+      - description: film name
+        in: query
+        name: film_name
+        required: true
+        type: string
+      - description: actor name
+        in: query
+        name: actor_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Films list
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Search-Films
+      tags:
+      - films
   /logout:
     post:
       consumes:
@@ -42,8 +359,6 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      security:
-      - ApiKeyAuth: []
       summary: Logout
       tags:
       - authentication
@@ -111,10 +426,5 @@ paths:
             type: string
       summary: SignUp
       tags:
-      - authorization
-securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: Authorization
-    type: apiKey
+      - registration
 swagger: "2.0"

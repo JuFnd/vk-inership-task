@@ -119,7 +119,7 @@ func (api *API) Signin(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary SignUp
-// @Tags authorization
+// @Tags registration
 // @Desription Create account
 // @ID create-account
 // @Accept json
@@ -162,7 +162,6 @@ func (api *API) Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary Logout
-// @Security ApiKeyAuth
 // @Tags authentication
 // @Description End current user's active session
 // @ID end-current-session
