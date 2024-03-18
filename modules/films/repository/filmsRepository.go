@@ -16,6 +16,8 @@ type FilmRepository struct {
 	db *sql.DB
 }
 
+//go:generate mockgen -source=core.go -destination=../mocks/core_mock.go -package=mocks
+
 func GetFilmRepository(configDatabase variables.RelationalDataBaseConfig, logger *slog.Logger) (*FilmRepository, error) {
 	dsn := fmt.Sprintf("user=%s dbname=%s password= %s host=%s port=%d sslmode=%s",
 		configDatabase.User, configDatabase.DbName, configDatabase.Password, configDatabase.Host, configDatabase.Port, configDatabase.Sslmode)

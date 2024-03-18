@@ -9,8 +9,10 @@ import (
 	"filmoteka/pkg/variables"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"log/slog"
 	"net"
+	"time"
 )
 
 type authorizationGrpc struct {
@@ -39,7 +41,10 @@ func NewServer(configRelational *variables.RelationalDataBaseConfig, configSessi
 		return nil, fmt.Errorf(variables.GrpcListenAndServeError, ": %w", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
+		Time:    20 * time.Second,
+		Timeout: 10 * time.Second,
+	}))
 	pbAuth.RegisterAuthorizationServer(grpcServer, &authorizationGrpcServer{
 		logger:            logger,
 		sessionRepository: session,

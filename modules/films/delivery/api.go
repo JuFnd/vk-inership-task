@@ -11,6 +11,8 @@ import (
 )
 
 // Core interface
+
+//go:generate mockgen -source=api.go -destination=../mocks/core_mock.go -package=mocks
 type ICore interface {
 	GetFilms(begin uint64, end uint64, sortType string) (communication.FilmsListResponse, error)
 	FindFilm(filmName string, actorName string) (communication.FindFilmResponse, error)
@@ -34,7 +36,7 @@ type API struct {
 func (api *API) ListenAndServe(appConfig *variables.AppConfig) error {
 	err := http.ListenAndServe(appConfig.Address, api.mux)
 	if err != nil {
-		api.logger.Error(variables.ListenAndServeError, err.Error())
+		//api.logger.Error(variables.ListenAndServeError, err.Error())
 		return err
 	}
 	return nil

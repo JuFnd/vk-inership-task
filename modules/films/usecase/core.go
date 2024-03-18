@@ -12,6 +12,8 @@ import (
 	"log/slog"
 )
 
+//go:generate mockgen -source=core.go -destination=../mocks/film_repository_mock.go -package=mocks
+
 type IFilmRepository interface {
 	GetFilms(begin uint64, end uint64, sortType string) (communication.FilmsListResponse, error)
 	FindFilm(filmName string, actorName string) (communication.FindFilmResponse, error)
