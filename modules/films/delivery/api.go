@@ -36,7 +36,7 @@ type API struct {
 func (api *API) ListenAndServe(appConfig *variables.AppConfig) error {
 	err := http.ListenAndServe(appConfig.Address, api.mux)
 	if err != nil {
-		//api.logger.Error(variables.ListenAndServeError, err.Error())
+		api.logger.Error(variables.ListenAndServeError, err.Error())
 		return err
 	}
 	return nil
