@@ -1,2 +1,2 @@
-# vk-intership-task
+# vk-internship-task
 VK Filmoteka
